@@ -1,19 +1,16 @@
 // Copyright (c) Alex Ellis 2017. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-package main
+package commands
 
 import (
-	"flag"
 	"fmt"
 	"log"
 
-	"os"
-
+	"github.com/alexellis/faas-cli/builder"
 	"github.com/alexellis/faas-cli/proxy"
 	"github.com/alexellis/faas-cli/stack"
-
-	"github.com/alexellis/faas-cli/builder"
+	"github.com/spf13/cobra"
 )
 
 const defaultNetwork = "func_functions"
@@ -21,39 +18,58 @@ const defaultNetwork = "func_functions"
 // GitCommit injected at build-time
 var GitCommit string
 
-func main() {
-	// var handler string
-	var handler string
-	var image string
+// Flags that are to be added to commands.
+var (
+	handler       string
+	image         string
+	action        string
+	functionName  string
+	gateway       string
+	fprocess      string
+	language      string
+	replace       bool
+	nocache       bool
+	yamlFile      string
+	yamlFileShort string
+	version       bool
+	squash        bool
+)
 
-	var action string
-	var functionName string
-	var gateway string
-	var fprocess string
-	var language string
-	var replace bool
-	var nocache bool
-	var yamlFile string
-	var yamlFileShort string
-	var version bool
-	var squash bool
+func init() {
+	faasCmd.PersistentFlags().StringVar(&handler, "handler", "", "handler for function, i.e. handler.js")
+	faasCmd.PersistentFlags().StringVar(&image, "image", "", "Docker image name to build")
+	faasCmd.PersistentFlags().StringVar(&action, "action", "", "either build, deploy or delete")
+	faasCmd.PersistentFlags().StringVar(&functionName, "name", "", "give the name of your deployed function")
+	faasCmd.PersistentFlags().StringVar(&gateway, "gateway", "http://localhost:8080", "gateway URI - i.e. http://localhost:8080")
+	faasCmd.PersistentFlags().StringVar(&fprocess, "fprocess", "", "fprocess to be run by the watchdog")
+	faasCmd.PersistentFlags().StringVar(&language, "lang", "node", "programming language template, default is: node")
+	faasCmd.PersistentFlags().BoolVar(&replace, "replace", true, "replace any existing function")
+	faasCmd.PersistentFlags().BoolVar(&nocache, "no-cache", false, "do not use Docker's build cache")
 
-	flag.StringVar(&handler, "handler", "", "handler for function, i.e. handler.js")
-	flag.StringVar(&image, "image", "", "Docker image name to build")
-	flag.StringVar(&action, "action", "", "Available actions: build, deploy, push, delete")
-	flag.StringVar(&functionName, "name", "", "give the name of your deployed function")
-	flag.StringVar(&gateway, "gateway", "http://localhost:8080", "gateway URI - i.e. http://localhost:8080")
-	flag.StringVar(&fprocess, "fprocess", "", "fprocess to be run by the watchdog")
-	flag.StringVar(&language, "lang", "node", "programming language template, default is: node")
-	flag.BoolVar(&replace, "replace", true, "replace any existing function")
-	flag.BoolVar(&nocache, "no-cache", false, "do not use Docker's build cache")
+	faasCmd.PersistentFlags().StringVarP(&yamlFile, "yaml", "f", "", "use a yaml file for a set of functions")
+	// flag.StringVar(&yamlFileShort, "f", "", "use a yaml file for a set of functions (same as -yaml)")
 
-	flag.StringVar(&yamlFile, "yaml", "", "use a yaml file for a set of functions")
-	flag.StringVar(&yamlFileShort, "f", "", "use a yaml file for a set of functions (same as -yaml)")
-	flag.BoolVar(&version, "version", false, "show version and quit")
-	flag.BoolVar(&squash, "squash", false, "use Docker's squash flag for potentially smaller images (currently experimental)")
+	faasCmd.PersistentFlags().BoolVar(&version, "version", false, "show version and quit")
+	faasCmd.PersistentFlags().BoolVar(&squash, "squash", false, "use Docker's squash flag for potentially smaller images (currently experimental)")
+}
 
-	flag.Parse()
+// Execute TODO
+func Execute() {
+	faasCmd.Execute()
+}
+
+// faasCmd is the FaaS CLI root command and mimics the legacy client behaviour
+// Every other command attached to FaasCmd is a child command to it.
+var faasCmd = &cobra.Command{
+	Use:   "faas-cli",
+	Short: "build and deploy FaaS functions",
+	Long: `TODO Add a full description including a link to
+the commands documentation - https://github.com/alexellis/faas`,
+	Run: runFaas,
+}
+
+// runFaas TODO
+func runFaas(cmd *cobra.Command, args []string) {
 
 	if version {
 		fmt.Printf("Git Commit: %s\n", GitCommit)
@@ -180,23 +196,4 @@ func main() {
 		fmt.Println("-action must be 'build', 'deploy', 'push' or 'delete'.")
 		break
 	}
-}
-
-func pushImage(image string) {
-	builder.ExecCommand("./", []string{"docker", "push", image})
-}
-
-func pullTemplates() error {
-	var err error
-	exists, err := os.Stat("./template")
-	if err != nil || exists == nil {
-		log.Println("No templates found in current directory.")
-
-		err = fetchTemplates()
-		if err != nil {
-			log.Println("Unable to download templates from Github.")
-			return err
-		}
-	}
-	return err
 }

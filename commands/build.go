@@ -1,9 +1,98 @@
 package commands
 
 import (
+	"fmt"
 	"log"
 	"os"
+
+	"github.com/alexellis/faas-cli/builder"
+	"github.com/alexellis/faas-cli/stack"
+	"github.com/spf13/cobra"
 )
+
+// Flags that are to be added to commands.
+var (
+	nocache bool
+	squash  bool
+)
+
+func init() {
+	// Setup flags that are used by multiple commands (variables defined in faas.go)
+	buildCmd.Flags().StringVar(&image, "image", "", "Docker image name to build")
+	buildCmd.Flags().StringVar(&handler, "handler", "", "Handler for function, i.e. handler.js")
+	buildCmd.Flags().StringVar(&functionName, "name", "", "Name of the deployed function")
+	buildCmd.Flags().StringVar(&language, "lang", "node", "Programming language template, default is: node")
+
+	// Setup flags that are used only by this command (variables defined above)
+	buildCmd.Flags().BoolVar(&nocache, "no-cache", false, "Do not use Docker's build cache")
+	buildCmd.Flags().BoolVar(&squash, "squash", false, "Use Docker's squash flag for potentially smaller images (currently experimental)")
+
+	// Set bash-completion.
+	_ = buildCmd.Flags().SetAnnotation("handler", cobra.BashCompSubdirsInDir, []string{})
+
+	faasCmd.AddCommand(buildCmd)
+}
+
+// buildCmd allows the user to build an OpenFaaS function container
+var buildCmd = &cobra.Command{
+	Use:   "build [-f YAML_FILE] [--image IMAGE_NAME --lang <ruby|python|python-armf|node|node-armf|csharp> --handler DIR --name FUNCTION_NAME]",
+	Short: "Builds OpenFaaS function container(s)",
+	Long: `Builds OpenFaaS function containers either via the supplied 
+YAML config using the "--yaml" flag (which may contain multiple
+function definitions), or directly via flags.`,
+	Example: `  faas-cli build -f https://raw.githubusercontent.com/alexellis/faas-cli/master/samples.yml
+  faas-cli build -f ./samples.yml
+  faas-cli build --image=alexellis/faas-url-ping --lang=python --handler=./sample/url-ping --name=url-ping`,
+	Run: runBuild,
+}
+
+func runBuild(cmd *cobra.Command, args []string) {
+
+	var services stack.Services
+	if len(yamlFile) > 0 {
+		parsedServices, err := stack.ParseYAML(yamlFile)
+		if err != nil {
+			log.Fatalln(err.Error())
+			return
+		}
+
+		if parsedServices != nil {
+			services = *parsedServices
+		}
+	}
+
+	if pullErr := pullTemplates(); pullErr != nil {
+		log.Fatalln("Could not pull templates for FaaS.", pullErr)
+	}
+
+	if len(services.Functions) > 0 {
+		for k, function := range services.Functions {
+			if function.SkipBuild {
+				fmt.Printf("Skipping build of: %s.\n", function.Name)
+			} else {
+				function.Name = k
+				// fmt.Println(k, function)
+				fmt.Printf("Building: %s.\n", function.Name)
+				builder.BuildImage(function.Image, function.Handler, function.Name, function.Language, nocache, squash)
+			}
+		}
+	} else {
+		if len(image) == 0 {
+			fmt.Println("Please provide a valid -image name for your Docker image.")
+			return
+		}
+		if len(handler) == 0 {
+			fmt.Println("Please provide the full path to your function's handler.")
+			return
+		}
+		if len(functionName) == 0 {
+			fmt.Println("Please provide the deployed -name of your function.")
+			return
+		}
+		builder.BuildImage(image, handler, functionName, language, nocache, squash)
+	}
+
+}
 
 func pullTemplates() error {
 	var err error

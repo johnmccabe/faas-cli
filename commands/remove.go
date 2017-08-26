@@ -11,25 +11,24 @@ import (
 
 func init() {
 	// Setup flags that are used by multiple commands (variables defined in faas.go)
-	deleteCmd.Flags().StringVar(&functionName, "name", "", "Name of the deployed function")
-	deleteCmd.Flags().StringVar(&gateway, "gateway", "http://localhost:8080", "Gateway URI - defaults to http://localhost:8080")
+	removeCmd.Flags().StringVar(&functionName, "name", "", "Name of the deployed function")
+	removeCmd.Flags().StringVar(&gateway, "gateway", "http://localhost:8080", "Gateway URI - defaults to http://localhost:8080")
 
-	faasCmd.AddCommand(deleteCmd)
+	faasCmd.AddCommand(removeCmd)
 }
 
-// faasCmd is the FaaS CLI root command and mimics the legacy client behaviour
-// Every other command attached to FaasCmd is a child command to it.
-var deleteCmd = &cobra.Command{
-	Use:     "delete (FUNCTION_NAME | -f YAML_FILE)",
-	Aliases: []string{"rm", "remove"},
-	Short:   "Delete deployed FaaS function(s)",
-	Long: `Deletes deployed OpenFaaS functions either via the supplied 
+// removeCmd deletes/removes OpenFaaS function containers
+var removeCmd = &cobra.Command{
+	Use:     "remove (FUNCTION_NAME | -f YAML_FILE)",
+	Aliases: []string{"rm", "delete"},
+	Short:   "Remove deployed FaaS function(s)",
+	Long: `Removes/deletes deployed OpenFaaS functions either via the supplied 
 YAML config using the "--yaml" flag (which may contain multiple
 function definitions), or by explicitly specifying a function
 name.`,
-	Example: `  faas-cli delete -f https://raw.githubusercontent.com/alexellis/faas-cli/master/samples.yml
-  faas-cli delete -f ./samples.yml
-  faas-cli delete url-ping`,
+	Example: `  faas-cli remove -f https://raw.githubusercontent.com/alexellis/faas-cli/master/samples.yml
+  faas-cli remove -f ./samples.yml
+  faas-cli remove url-ping`,
 	Run: runDelete,
 }
 

@@ -3,8 +3,18 @@
 
 package main
 
-import "github.com/alexellis/faas-cli/commands"
+import (
+	"fmt"
+	"os"
+
+	"github.com/alexellis/faas-cli/commands"
+)
 
 func main() {
-	commands.Execute()
+	customArgs, err := translateLegacyOpts(os.Args)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+		os.Exit(1)
+	}
+	commands.Execute(customArgs)
 }

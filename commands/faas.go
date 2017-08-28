@@ -33,8 +33,9 @@ func init() {
 }
 
 // Execute TODO
-func Execute() {
+func Execute(customArgs []string) {
 	faasCmd.SilenceUsage = true
+	faasCmd.SetArgs(customArgs[1:])
 	faasCmd.Execute()
 }
 

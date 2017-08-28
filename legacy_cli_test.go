@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-var translateLegacyFlagsTests = []struct {
+var translateLegacyOptsTests = []struct {
 	title        string
 	inputArgs    []string
 	expectedArgs []string
@@ -125,14 +125,49 @@ var translateLegacyFlagsTests = []struct {
 		expectedArgs: []string{"faas-cli", "deploy", "-fe"},
 		expectError:  false,
 	},
+	{
+		title:        "legacy -action missing value",
+		inputArgs:    []string{"faas-cli", "-action"},
+		expectedArgs: []string{""},
+		expectError:  true,
+	},
+	{
+		title:        "legacy -action= missing value",
+		inputArgs:    []string{"faas-cli", "-action="},
+		expectedArgs: []string{""},
+		expectError:  true,
+	},
+	{
+		title:        "legacy -action with unknown value",
+		inputArgs:    []string{"faas-cli", "-action", "unknownaction"},
+		expectedArgs: []string{""},
+		expectError:  true,
+	},
+	{
+		title:        "legacy -action= with unknown value",
+		inputArgs:    []string{"faas-cli", "-action=unknownaction"},
+		expectedArgs: []string{""},
+		expectError:  true,
+	},
 }
 
-func Test_translateLegacyFlags(t *testing.T) {
-	for _, test := range translateLegacyFlagsTests {
+func Test_translateLegacyOpts(t *testing.T) {
+	for _, test := range translateLegacyOptsTests {
 		t.Run(test.title, func(t *testing.T) {
-			actual := translateLegacyFlags(test.inputArgs)
+			actual, err := translateLegacyOpts(test.inputArgs)
+			if test.expectError {
+				if err == nil {
+					t.Errorf("TranslateLegacyOpts test [%s] test failed, expected error not thrown", test.title)
+					return
+				}
+			} else {
+				if err != nil {
+					t.Errorf("TranslateLegacyOpts test [%s] test failed, unexpected error thrown", test.title)
+					return
+				}
+			}
 			if !reflect.DeepEqual(actual, test.expectedArgs) {
-				t.Errorf("TranslateLegacyFlags test [%s] test failed, does not match expected result;\n  actual:   [%v]\n  expected: [%v]",
+				t.Errorf("TranslateLegacyOpts test [%s] test failed, does not match expected result;\n  actual:   [%v]\n  expected: [%v]",
 					test.title,
 					actual,
 					test.expectedArgs,

@@ -61,7 +61,8 @@ via flags.`,
   faas-cli deploy -f ./samples.yml --replace=false
   faas-cli deploy --image=alexellis/faas-url-ping --name=url-ping
   faas-cli deploy --image=my_image --name=my_fn --handler=/path/to/fn/
-                  --lang=python --env=MYVAR=myval`,
+                  --gateway=http://remote-site.com:8080 --lang=python
+                  --env=MYVAR=myval`,
 	Run: runDeploy,
 }
 

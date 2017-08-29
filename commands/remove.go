@@ -32,7 +32,7 @@ explicitly specifying a function name.`,
 	Example: `  faas-cli remove -f https://domain/path/myfunctions.yml
   faas-cli remove -f ./samples.yml
   faas-cli remove url-ping
-  faas-cli remove img2ansi --gateway==http://faas.mydomain.com:8080/`,
+  faas-cli remove img2ansi --gateway==http://remote-site.com:8080`,
 	Run: runDelete,
 }
 

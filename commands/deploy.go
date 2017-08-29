@@ -32,7 +32,7 @@ func init() {
 
 	// Setup flags that are used only by this command (variables defined above)
 	deployCmd.Flags().StringArrayVarP(&envvarOpts, "env", "e", []string{}, "Set environment variable ENVVAR=VALUE. Can be repeated.")
-	deployCmd.Flags().BoolVar(&replace, "replace", false, "Replace any existing function (defaults to false)")
+	deployCmd.Flags().BoolVar(&replace, "replace", true, "Replace any existing function (defaults to true)")
 
 	// Set bash-completion.
 	_ = deployCmd.Flags().SetAnnotation("handler", cobra.BashCompSubdirsInDir, []string{})
@@ -52,7 +52,7 @@ function definitions), or directly via flags.
 Pass the --replace flag to overwrite existing functions.`,
 	Example: `  faas-cli deploy -f https://raw.githubusercontent.com/alexellis/faas-cli/master/samples.yml
   faas-cli deploy -f ./samples.yml
-  faas-cli deploy -f ./samples.yml --replace
+  faas-cli deploy -f ./samples.yml --replace=false
   faas-cli deploy --image=alexellis/faas-url-ping --name=url-ping
   faas-cli deploy --image=alexellis/faas-url-ping --name=url-ping --lang=python --hander=./url-ping/ --env=MYVAR=myval --env=MYOTHERVAR=myotherval --replace`,
 	Run: runDeploy,

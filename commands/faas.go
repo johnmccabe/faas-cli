@@ -43,9 +43,9 @@ func Execute(customArgs []string) {
 // Every other command attached to FaasCmd is a child command to it.
 var faasCmd = &cobra.Command{
 	Use:   "faas-cli",
-	Short: "build and deploy FaaS functions",
-	Long: `TODO Add a full description including a link to
-the commands documentation - https://github.com/alexellis/faas`,
+	Short: "Manage your OpenFaaS functions from the command line",
+	Long: `
+Manage your OpenFaaS functions from the command line`,
 	Run: runFaas,
 }
 

@@ -22,13 +22,14 @@ var (
 func init() {
 	// Setup flags that are used by multiple commands (variables defined in faas.go)
 	buildCmd.Flags().StringVar(&image, "image", "", "Docker image name to build")
-	buildCmd.Flags().StringVar(&handler, "handler", "", "Handler for function, i.e. handler.js")
+	buildCmd.Flags().StringVar(&handler, "handler", "", "Directory with handler for function, e.g. handler.js")
 	buildCmd.Flags().StringVar(&functionName, "name", "", "Name of the deployed function")
-	buildCmd.Flags().StringVar(&language, "lang", "node", "Programming language template, default is: node")
+	buildCmd.Flags().StringVar(&language, "lang", "node", "Programming language template")
 
 	// Setup flags that are used only by this command (variables defined above)
 	buildCmd.Flags().BoolVar(&nocache, "no-cache", false, "Do not use Docker's build cache")
-	buildCmd.Flags().BoolVar(&squash, "squash", false, "Use Docker's squash flag for potentially smaller images (currently experimental)")
+	buildCmd.Flags().BoolVar(&squash, "squash", false, `Use Docker's squash flag for smaller images
+                         [experimental] `)
 
 	// Set bash-completion.
 	_ = buildCmd.Flags().SetAnnotation("handler", cobra.BashCompSubdirsInDir, []string{})
@@ -38,14 +39,20 @@ func init() {
 
 // buildCmd allows the user to build an OpenFaaS function container
 var buildCmd = &cobra.Command{
-	Use:   "build [-f YAML_FILE] [--image IMAGE_NAME --lang <ruby|python|python-armf|node|node-armf|csharp> --handler DIR --name FUNCTION_NAME]",
-	Short: "Builds OpenFaaS function container(s)",
-	Long: `Builds OpenFaaS function containers either via the supplied 
-YAML config using the "--yaml" flag (which may contain multiple
-function definitions), or directly via flags.`,
-	Example: `  faas-cli build -f https://raw.githubusercontent.com/alexellis/faas-cli/master/samples.yml
-  faas-cli build -f ./samples.yml
-  faas-cli build --image=alexellis/faas-url-ping --lang=python --handler=./sample/url-ping --name=url-ping`,
+	Use: `build -f YAML_FILE [--no-cache] [--squash]
+  faas-cli build --image IMAGE_NAME
+                 --handler HANDLER_DIR
+                 --name FUNCTION_NAME
+                 [--lang <ruby|python|python-armf|node|node-armf|csharp>]
+                 [--no-cache] [--squash]`,
+	Short: "Builds OpenFaaS function containers",
+	Long: `Builds OpenFaaS function containers either via the supplied YAML config using
+the "--yaml" flag (which may contain multiple function definitions), or directly
+via flags.`,
+	Example: `  faas-cli build -f https://domain/path/myfunctions.yml
+  faas-cli build -f ./samples.yml --no-cache
+  faas-cli build --image=my_image --lang=python --handler=/path/to/fn/ 
+                 --name=my_fn --squash`,
 	Run: runBuild,
 }
 

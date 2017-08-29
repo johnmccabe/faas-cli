@@ -19,17 +19,16 @@ func init() {
 // pushCmd handles pushing function container images to a remote repo
 var pushCmd = &cobra.Command{
 	Use:   "push -f YAML_FILE",
-	Short: "Push OpenFaaS function(s) defined in YAML (currently to Docker Hub)",
-	Long: `Pushes the OpenFaaS function container image(s) defined in the
-supplied YAML config to a remote repository.
+	Short: "Push OpenFaaS functions to remote registry (Docker Hub)",
+	Long: `Pushes the OpenFaaS function container image(s) defined in the supplied YAML
+config to a remote repository.
 
-These container images must already be present in your local image
-cache.
+These container images must already be present in your local image cache.
 
-NOTE - this command currently supports pushing to docker hub only,
-	   support for additional container repos is planned.`,
+NOTE - this command currently supports pushing to docker hub only, support for
+       additional container repos is planned.`,
 
-	Example: `  faas-cli push -f https://raw.githubusercontent.com/alexellis/faas-cli/master/samples.yml
+	Example: `  faas-cli push -f https://domain/path/myfunctions.yml
   faas-cli push -f ./samples.yml`,
 	Run: runPush,
 }

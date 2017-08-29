@@ -24,15 +24,15 @@ var (
 func init() {
 	// Setup flags that are used by multiple commands (variables defined in faas.go)
 	deployCmd.Flags().StringVar(&fprocess, "fprocess", "", "Fprocess to be run by the watchdog")
-	deployCmd.Flags().StringVar(&gateway, "gateway", "http://localhost:8080", "Gateway URI (defaults to http://localhost:8080)")
-	deployCmd.Flags().StringVar(&handler, "handler", "", "Handler for function, i.e. handler.js")
+	deployCmd.Flags().StringVar(&gateway, "gateway", "http://localhost:8080", "Gateway URI")
+	deployCmd.Flags().StringVar(&handler, "handler", "", "Directory with handler for function, e.g. handler.js")
 	deployCmd.Flags().StringVar(&image, "image", "", "Docker image name to build")
-	deployCmd.Flags().StringVar(&language, "lang", "node", "Programming language template (defaults  node)")
+	deployCmd.Flags().StringVar(&language, "lang", "node", "Programming language template")
 	deployCmd.Flags().StringVar(&functionName, "name", "", "Name of the deployed function")
 
 	// Setup flags that are used only by this command (variables defined above)
-	deployCmd.Flags().StringArrayVarP(&envvarOpts, "env", "e", []string{}, "Set environment variable ENVVAR=VALUE. Can be repeated.")
-	deployCmd.Flags().BoolVar(&replace, "replace", true, "Replace any existing function (defaults to true)")
+	deployCmd.Flags().StringArrayVarP(&envvarOpts, "env", "e", []string{}, "Set one or more environment variables (ENVVAR=VALUE)")
+	deployCmd.Flags().BoolVar(&replace, "replace", true, "Replace any existing function")
 
 	// Set bash-completion.
 	_ = deployCmd.Flags().SetAnnotation("handler", cobra.BashCompSubdirsInDir, []string{})
@@ -42,19 +42,26 @@ func init() {
 
 // deployCmd handles deploying OpenFaaS function containers
 var deployCmd = &cobra.Command{
-	Use: "deploy (-f YAML_FILE | --image IMAGE_NAME --name FUNCTION_NAME [--lang <ruby|python|node|csharp>] [--handler DIR] [--env ENVVAR=VALUE ...]) [--replace]",
+	Use: `deploy -f YAML_FILE [--replace=false]
+  faas-cli deploy --image IMAGE_NAME
+                  --name FUNCTION_NAME
+                  [--lang <ruby|python|node|csharp>]
+                  [--gateway GATEWAY_URL]
+                  [--handler HANDLER_DIR]
+                  [--fprocess PROCESS]
+                  [--env ENVVAR=VALUE ...]
+                  [--replace=false]`,
 
 	Short: "Deploy OpenFaaS functions",
-	Long: `Deploys OpenFaaS function containers either via the supplied 
-YAML config using the "--yaml" flag (which may contain multiple
-function definitions), or directly via flags.
-
-Pass the --replace flag to overwrite existing functions.`,
-	Example: `  faas-cli deploy -f https://raw.githubusercontent.com/alexellis/faas-cli/master/samples.yml
+	Long: `Deploys OpenFaaS function containers either via the supplied YAML config using
+the "--yaml" flag (which may contain multiple function definitions), or directly
+via flags.`,
+	Example: `  faas-cli deploy -f https://domain/path/myfunctions.yml
   faas-cli deploy -f ./samples.yml
   faas-cli deploy -f ./samples.yml --replace=false
   faas-cli deploy --image=alexellis/faas-url-ping --name=url-ping
-  faas-cli deploy --image=alexellis/faas-url-ping --name=url-ping --lang=python --hander=./url-ping/ --env=MYVAR=myval --env=MYOTHERVAR=myotherval --replace`,
+  faas-cli deploy --image=my_image --name=my_fn --handler=/path/to/fn/
+                  --lang=python --env=MYVAR=myval`,
 	Run: runDeploy,
 }
 
